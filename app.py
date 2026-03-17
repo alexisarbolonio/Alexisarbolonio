@@ -1,9 +1,10 @@
 from flask import Flask, jsonify, request
 from datetime import datetime
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
-# Temporary database
 students = [
     {
         "id": 1,
@@ -14,71 +15,39 @@ students = [
     }
 ]
 
-# Home Route
 @app.route('/')
 def home():
     return jsonify({
-        "message": "Welcome to the Enhanced Flask Student API",
-        "total_students": len(students),
-        "routes": {
-            "View All Students": "GET /students",
-            "Get Student by ID": "GET /students/<id>",
-            "Search Student": "GET /students/search?name=juan",
-            "Add Student": "POST /students",
-            "Update Student": "PUT /students/<id>",
-            "Delete Student": "DELETE /students/<id>"
-        }
+        "message": "Student Management API",
+        "status": "Running",
+        "total_students": len(students)
     })
 
 
-# Get all students
+# GET all students
 @app.route('/students', methods=['GET'])
 def get_students():
-    return jsonify({
-        "total": len(students),
-        "students": students
-    })
+    return jsonify(students)
 
 
-# Get student by ID
+# GET one student
 @app.route('/students/<int:id>', methods=['GET'])
 def get_student(id):
     for student in students:
         if student["id"] == id:
             return jsonify(student)
 
-    return jsonify({
-        "error": "Student not found"
-    }), 404
+    return jsonify({"error": "Student not found"}), 404
 
 
-# Search student
-@app.route('/students/search', methods=['GET'])
-def search_student():
-    name = request.args.get("name")
-
-    results = [
-        s for s in students
-        if name.lower() in s["name"].lower()
-    ]
-
-    if results:
-        return jsonify(results)
-
-    return jsonify({
-        "message": "No matching student found"
-    })
-
-
-# Add student
+# ADD student
 @app.route('/students', methods=['POST'])
 def add_student():
+
     data = request.json
 
     if not data or not data.get("name"):
-        return jsonify({
-            "error": "Student name is required"
-        }), 400
+        return jsonify({"error": "Name is required"}), 400
 
     new_student = {
         "id": len(students) + 1,
@@ -93,12 +62,13 @@ def add_student():
     return jsonify({
         "message": "Student added successfully",
         "student": new_student
-    }), 201
+    })
 
 
-# Update student
+# UPDATE student
 @app.route('/students/<int:id>', methods=['PUT'])
 def update_student(id):
+
     data = request.json
 
     for student in students:
@@ -109,32 +79,27 @@ def update_student(id):
             student["section"] = data.get("section", student["section"])
 
             return jsonify({
-                "message": "Student updated successfully",
+                "message": "Student updated",
                 "student": student
             })
 
-    return jsonify({
-        "error": "Student not found"
-    }), 404
+    return jsonify({"error": "Student not found"}), 404
 
 
-# Delete student
+# DELETE student
 @app.route('/students/<int:id>', methods=['DELETE'])
 def delete_student(id):
+
     for student in students:
         if student["id"] == id:
             students.remove(student)
 
             return jsonify({
-                "message": "Student deleted successfully",
-                "remaining_students": len(students)
+                "message": "Student deleted"
             })
 
-    return jsonify({
-        "error": "Student not found"
-    }), 404
+    return jsonify({"error": "Student not found"}), 404
 
 
-# Run server
 if __name__ == "__main__":
     app.run(debug=True)
